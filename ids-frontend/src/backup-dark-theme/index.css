@@ -1,0 +1,138 @@
+/* ─── Google Fonts (must be first) ─────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Base Reset & Background ──────────────────────────────────────────────── */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  height: 100%;
+  background-color: #080d14;
+  color: #c9d8e8;
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── Scrollbar Styling ────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: #0f1923; }
+::-webkit-scrollbar-thumb { background: #1e3a52; border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: #00d4ff88; }
+
+/* ─── SOC Panel ────────────────────────────────────────────────────────────── */
+.panel {
+  @apply bg-soc-surface border border-soc-border rounded-xl shadow-panel;
+  position: relative;
+  overflow: hidden;
+}
+
+.panel::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0,212,255,0.4), transparent);
+}
+
+.panel-header {
+  @apply px-4 py-3 border-b border-soc-border flex items-center justify-between;
+  background: linear-gradient(180deg, rgba(0,212,255,0.04) 0%, transparent 100%);
+}
+
+.panel-title {
+  @apply text-sm font-semibold tracking-widest uppercase text-soc-cyan;
+  letter-spacing: 0.12em;
+}
+
+/* ─── Glow Effects ────────────────────────────────────────────────────────── */
+.glow-cyan   { @apply shadow-cyan; text-shadow: 0 0 8px rgba(0,212,255,0.7); }
+.glow-red    { @apply shadow-red;  text-shadow: 0 0 8px rgba(255,59,59,0.7); }
+.glow-green  { text-shadow: 0 0 8px rgba(34,211,165,0.7); }
+
+/* ─── Status Badge ────────────────────────────────────────────────────────── */
+.badge {
+  @apply text-xs font-semibold px-2 py-0.5 rounded font-mono uppercase tracking-wider;
+}
+.badge-benign   { @apply bg-soc-green/10  text-soc-green  border border-soc-green/30; }
+.badge-ddos     { @apply bg-soc-red/20    text-soc-red    border border-soc-red/40; }
+.badge-scan     { @apply bg-soc-amber/15  text-soc-amber  border border-soc-amber/30; }
+.badge-exfil    { @apply bg-soc-purple/15 text-soc-purple border border-soc-purple/30; }
+
+/* ─── Navigation Tabs ─────────────────────────────────────────────────────── */
+.nav-tab {
+  @apply px-5 py-2 text-sm font-medium rounded-lg transition-all duration-200 tracking-wide;
+}
+.nav-tab-active {
+  @apply bg-soc-cyan/10 text-soc-cyan border border-soc-cyan/30 shadow-cyan;
+}
+.nav-tab-inactive {
+  @apply text-soc-muted hover:text-soc-text hover:bg-soc-card border border-transparent;
+}
+
+/* ─── Scan Line Animation (fullscreen overlay) ────────────────────────────── */
+.scan-overlay {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 212, 255, 0.015) 2px,
+    rgba(0, 212, 255, 0.015) 4px
+  );
+}
+
+/* ─── Confidence Bar ──────────────────────────────────────────────────────── */
+.confidence-bar-track {
+  @apply h-1.5 rounded-full bg-soc-border overflow-hidden;
+}
+.confidence-bar-fill {
+  @apply h-full rounded-full transition-all duration-500;
+}
+
+/* ─── Recharts Overrides ─────────────────────────────────────────────────── */
+.recharts-tooltip-wrapper .recharts-default-tooltip {
+  background: #0f1923 !important;
+  border: 1px solid #1e3a52 !important;
+  border-radius: 8px !important;
+  color: #c9d8e8 !important;
+  font-size: 12px !important;
+  font-family: 'JetBrains Mono', monospace !important;
+}
+
+.recharts-cartesian-grid-horizontal line,
+.recharts-cartesian-grid-vertical line {
+  stroke: #1e3a52 !important;
+}
+
+.recharts-text { fill: #4d6b8a !important; font-size: 11px !important; }
+
+/* ─── Node Attack Flash ───────────────────────────────────────────────────── */
+.node-attack {
+  animation: nodeFlash 0.8s ease-in-out 3;
+}
+
+@keyframes nodeFlash {
+  0%, 100% { filter: drop-shadow(0 0 4px #ff3b3b); }
+  50%       { filter: drop-shadow(0 0 20px #ff3b3b) drop-shadow(0 0 40px #ff0000); }
+}
+
+/* ─── Packet Table Row ─────────────────────────────────────────────────────── */
+.packet-row {
+  @apply transition-all duration-300 animate-fade-in border-b border-soc-border/50;
+}
+.packet-row:hover { background: rgba(0,212,255,0.04); }
+.packet-row-attack { background: rgba(255,59,59,0.06); }
+
+/* ─── Gauge SVG Styles ────────────────────────────────────────────────────── */
+.gauge-track   { stroke: #1e3a52; fill: none; }
+.gauge-fill    { fill: none; stroke-linecap: round; transition: stroke-dashoffset 0.6s ease, stroke 0.4s ease; }

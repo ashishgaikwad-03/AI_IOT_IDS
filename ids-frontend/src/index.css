@@ -1,0 +1,129 @@
+/* ─── Google Fonts (must be first) ─────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Base Reset & Background ──────────────────────────────────────────────── */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  height: 100%;
+  background-color: #f5f7fa;
+  color: #1e293b;
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── Scrollbar Styling ────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: #f1f5f9; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: #0284c788; }
+
+/* ─── SOC Panel ────────────────────────────────────────────────────────────── */
+.panel {
+  @apply bg-soc-surface border border-soc-border rounded-xl shadow-panel;
+  position: relative;
+  overflow: hidden;
+}
+
+.panel::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(2,132,199,0.15), transparent);
+}
+
+.panel-header {
+  @apply px-4 py-3 border-b border-soc-border flex items-center justify-between;
+  background: linear-gradient(180deg, rgba(2,132,199,0.03) 0%, transparent 100%);
+}
+
+.panel-title {
+  @apply text-sm font-semibold tracking-widest uppercase text-soc-cyan;
+  letter-spacing: 0.12em;
+}
+
+/* ─── Glow Effects (subtle for light theme) ───────────────────────────────── */
+.glow-cyan   { @apply shadow-cyan; }
+.glow-red    { @apply shadow-red; }
+.glow-green  { }
+
+/* ─── Status Badge ────────────────────────────────────────────────────────── */
+.badge {
+  @apply text-xs font-semibold px-2 py-0.5 rounded font-mono uppercase tracking-wider;
+}
+.badge-benign   { @apply bg-green-50    text-green-700   border border-green-200; }
+.badge-ddos     { @apply bg-red-50      text-red-700     border border-red-200; }
+.badge-scan     { @apply bg-amber-50    text-amber-700   border border-amber-200; }
+.badge-exfil    { @apply bg-purple-50   text-purple-700  border border-purple-200; }
+
+/* ─── Navigation Tabs ─────────────────────────────────────────────────────── */
+.nav-tab {
+  @apply px-5 py-2 text-sm font-medium rounded-lg transition-all duration-200 tracking-wide;
+}
+.nav-tab-active {
+  @apply bg-sky-50 text-soc-cyan border border-sky-200 shadow-cyan;
+}
+.nav-tab-inactive {
+  @apply text-soc-muted hover:text-soc-text hover:bg-gray-100 border border-transparent;
+}
+
+/* ─── Scan Line Animation (hidden for light theme) ────────────────────────── */
+.scan-overlay {
+  display: none;
+}
+
+/* ─── Confidence Bar ──────────────────────────────────────────────────────── */
+.confidence-bar-track {
+  @apply h-1.5 rounded-full bg-gray-200 overflow-hidden;
+}
+.confidence-bar-fill {
+  @apply h-full rounded-full transition-all duration-500;
+}
+
+/* ─── Recharts Overrides ─────────────────────────────────────────────────── */
+.recharts-tooltip-wrapper .recharts-default-tooltip {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 8px !important;
+  color: #1e293b !important;
+  font-size: 12px !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important;
+}
+
+.recharts-cartesian-grid-horizontal line,
+.recharts-cartesian-grid-vertical line {
+  stroke: #e2e8f0 !important;
+}
+
+.recharts-text { fill: #64748b !important; font-size: 11px !important; }
+
+/* ─── Node Attack Flash ───────────────────────────────────────────────────── */
+.node-attack {
+  animation: nodeFlash 0.8s ease-in-out 3;
+}
+
+@keyframes nodeFlash {
+  0%, 100% { filter: drop-shadow(0 0 4px #dc2626); }
+  50%       { filter: drop-shadow(0 0 12px #dc2626) drop-shadow(0 0 24px #ef4444); }
+}
+
+/* ─── Packet Table Row ─────────────────────────────────────────────────────── */
+.packet-row {
+  @apply transition-all duration-300 animate-fade-in border-b border-soc-border/50;
+}
+.packet-row:hover { background: rgba(2,132,199,0.04); }
+.packet-row-attack { background: rgba(220,38,38,0.04); }
+
+/* ─── Gauge SVG Styles ────────────────────────────────────────────────────── */
+.gauge-track   { stroke: #e2e8f0; fill: none; }
+.gauge-fill    { fill: none; stroke-linecap: round; transition: stroke-dashoffset 0.6s ease, stroke 0.4s ease; }
