@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>IDS Architecture — Block Diagram</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #fff;
+    font-family: 'Segoe UI', 'Inter', Arial, sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 40px;
+  }
+  .diagram {
+    width: 1100px;
+    height: 580px;
+    position: relative;
+  }
+
+  /* ─── Blocks ─── */
+  .block {
+    position: absolute;
+    border-radius: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 14px 18px;
+    font-weight: 600;
+    font-size: 14px;
+    border: 2px solid;
+    transition: box-shadow 0.3s;
+  }
+  .block .subtitle {
+    font-size: 10.5px;
+    font-weight: 400;
+    margin-top: 4px;
+    opacity: 0.75;
+  }
+  .block .icon {
+    font-size: 22px;
+    margin-bottom: 4px;
+  }
+
+  /* Colors */
+  .b-blue    { background: #eff6ff; border-color: #93c5fd; color: #1e40af; }
+  .b-grey    { background: #f8fafc; border-color: #cbd5e1; color: #334155; }
+  .b-green   { background: #f0fdf4; border-color: #86efac; color: #166534; }
+  .b-red     { background: #fef2f2; border-color: #fca5a5; color: #991b1b; }
+  .b-purple  { background: #faf5ff; border-color: #c4b5fd; color: #5b21b6; }
+  .b-teal    { background: #f0fdfa; border-color: #5eead4; color: #115e59; }
+
+  /* ─── Arrows (SVG overlay) ─── */
+  svg.arrows {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+  }
+  .arrow-line {
+    stroke: #94a3b8;
+    stroke-width: 2;
+    fill: none;
+    marker-end: url(#arrowhead);
+  }
+  .arrow-label {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 10px;
+    fill: #64748b;
+    font-weight: 500;
+  }
+
+  /* ─── Section labels ─── */
+  .section-label {
+    position: absolute;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #94a3b8;
+  }
+</style>
+</head>
+<body>
+
+<div class="diagram">
+
+  <!-- Section labels -->
+  <div class="section-label" style="top: 6px; left: 0;">INPUT</div>
+  <div class="section-label" style="top: 6px; left: 290px;">PROCESSING</div>
+  <div class="section-label" style="top: 6px; left: 600px;">CLASSIFICATION</div>
+  <div class="section-label" style="top: 6px; left: 920px;">OUTPUT</div>
+
+  <!-- ═══ ROW 1: Live Traffic Pipeline ═══ -->
+
+  <!-- Block 1: Network Traffic -->
+  <div class="block b-blue" style="left: 0; top: 80; width: 150px; height: 90px;">
+    <div class="icon">📡</div>
+    Network Traffic
+    <div class="subtitle">Wi-Fi / Ethernet</div>
+  </div>
+
+  <!-- Block 2: TShark -->
+  <div class="block b-grey" style="left: 240; top: 65; width: 180px; height: 120px;">
+    <div class="icon">🔬</div>
+    TShark Capture
+    <div class="subtitle">Extracts 40 features<br>per packet in real-time</div>
+  </div>
+
+  <!-- Block 3: XGBoost Model -->
+  <div class="block b-teal" style="left: 520; top: 55; width: 200px; height: 140px;">
+    <div class="icon">🧠</div>
+    XGBoost Model
+    <div class="subtitle">11-Class Classifier<br>99.7% F1 Score<br>13.4μs / packet</div>
+  </div>
+
+  <!-- Block 4a: Benign -->
+  <div class="block b-green" style="left: 810; top: 55; width: 140px; height: 70px;">
+    <div style="font-size: 16px;">✅ Benign</div>
+    <div class="subtitle">Normal IoT traffic</div>
+  </div>
+
+  <!-- Block 4b: Attack -->
+  <div class="block b-red" style="left: 810; top: 145; width: 140px; height: 85px;">
+    <div style="font-size: 16px;">⚠️ Attack</div>
+    <div class="subtitle">DoS · DDoS · Scan<br>MITM · Brute Force</div>
+  </div>
+
+  <!-- ═══ ROW 2: Dashboard Output ═══ -->
+
+  <!-- Block 5: Dashboard -->
+  <div class="block b-blue" style="left: 820; top: 310; width: 250px; height: 110px;">
+    <div class="icon">📊</div>
+    React Dashboard
+    <div class="subtitle">Real-Time WebSocket<br>Threat Gauge · Packet Log · Charts</div>
+  </div>
+
+  <!-- ═══ ROW 3: File Scanner Pipeline ═══ -->
+
+  <!-- Block 6: CSV Upload -->
+  <div class="block b-purple" style="left: 0; top: 430; width: 150px; height: 90px;">
+    <div class="icon">📄</div>
+    CSV File Upload
+    <div class="subtitle">Offline traffic capture</div>
+  </div>
+
+  <!-- Block 7: BoT-IoT Model -->
+  <div class="block b-purple" style="left: 260; top: 430; width: 180px; height: 90px;">
+    <div class="icon">🧠</div>
+    BoT-IoT XGBoost
+    <div class="subtitle">12 flow-level features<br>8-class classifier</div>
+  </div>
+
+  <!-- Block 8: Results -->
+  <div class="block b-purple" style="left: 540; top: 430; width: 180px; height: 90px;">
+    <div class="icon">📋</div>
+    Scan Results
+    <div class="subtitle">Per-packet classification<br>+ confidence scores</div>
+  </div>
+
+
+  <!-- ═══ SVG Arrows ═══ -->
+  <svg class="arrows" viewBox="0 0 1100 580">
+    <defs>
+      <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+        <polygon points="0 0, 10 3.5, 0 7" fill="#94a3b8"/>
+      </marker>
+    </defs>
+
+    <!-- Row 1: Live pipeline -->
+    <!-- Network → TShark -->
+    <line class="arrow-line" x1="150" y1="125" x2="238" y2="125"/>
+    <text class="arrow-label" x="168" y="118">Live Packets</text>
+
+    <!-- TShark → XGBoost -->
+    <line class="arrow-line" x1="420" y1="125" x2="518" y2="125"/>
+    <text class="arrow-label" x="430" y="118">Feature Vectors</text>
+
+    <!-- XGBoost → Benign -->
+    <line class="arrow-line" x1="720" y1="100" x2="808" y2="90"/>
+
+    <!-- XGBoost → Attack -->
+    <line class="arrow-line" x1="720" y1="155" x2="808" y2="175"/>
+
+    <!-- Benign → Dashboard -->
+    <path class="arrow-line" d="M 880 125 Q 880 250, 920 308"/>
+
+    <!-- Attack → Dashboard -->
+    <path class="arrow-line" d="M 880 230 Q 880 280, 920 308"/>
+    <text class="arrow-label" x="888" y="270">WebSocket</text>
+
+    <!-- Row 3: File scanner pipeline -->
+    <!-- CSV → BoT-IoT -->
+    <line class="arrow-line" x1="150" y1="475" x2="258" y2="475"/>
+
+    <!-- BoT-IoT → Results -->
+    <line class="arrow-line" x1="440" y1="475" x2="538" y2="475"/>
+
+    <!-- Results → Dashboard -->
+    <path class="arrow-line" d="M 720 465 Q 780 420, 820 390"/>
+    <text class="arrow-label" x="740" y="425">HTTP API</text>
+
+    <!-- Dashed separator -->
+    <line x1="0" y1="400" x2="1100" y2="400" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="6 4"/>
+    <text x="10" y="415" class="arrow-label" style="font-size: 9px; letter-spacing: 1.5px;">OFFLINE ANALYSIS</text>
+  </svg>
+
+</div>
+
+</body>
+</html>
