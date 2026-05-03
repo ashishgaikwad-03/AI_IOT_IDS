@@ -1,0 +1,7 @@
+com\ids\service\SimulationService.class
+com\ids\config\WebSocketConfig.class
+com\ids\model\TelemetryPayload.class
+com\ids\service\SimulationService$TrafficParams.class
+com\ids\IdsBackendApplication.class
+com\ids\controller\TelemetryController.class
+com\ids\model\TelemetryPayload$TelemetryPayloadBuilder.class
