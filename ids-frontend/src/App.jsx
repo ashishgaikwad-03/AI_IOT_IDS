@@ -137,8 +137,8 @@ function IdsApp({ setIsAuthenticated }) {
             </div>
 
             {/* Dataset badge */}
-            <div className="hidden xl:block px-3 py-1.5 border border-soc-purple/30 bg-soc-purple/5 rounded-lg">
-              <span className="text-xs text-soc-purple font-mono tracking-wider">XGBoost 11-Class</span>
+            <div className="hidden xl:block px-3 py-1.5 border border-soc-cyan/30 bg-soc-cyan/5 rounded-lg">
+              <span className="text-xs text-soc-cyan font-mono tracking-wider">Custom ESP32 Model (Binary)</span>
             </div>
           </div>
 
