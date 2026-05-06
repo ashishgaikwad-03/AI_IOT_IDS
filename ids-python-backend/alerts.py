@@ -16,8 +16,9 @@ TOAST_ENABLED = True
 TELEGRAM_ENABLED = True           # Telegram alerts ON
 
 # ─── Telegram Config ─────────────────────────────────────────────────────────
-TELEGRAM_BOT_TOKEN = "8761769643:AAGNmfz7Jil42ThtqH8MqciCzDztdSrn10s"
-TELEGRAM_CHAT_ID = "915431108"
+TELEGRAM_BOT_TOKEN = "8697442024:AAFnMcIqebrFuDg-k8NCEN6FxNITV_VbZls"
+TELEGRAM_CHAT_ID = "5120288258"
+DASHBOARD_URL = "http://localhost:8000"  # Updated by localtunnel if running
 
 # ─── Internal State ──────────────────────────────────────────────────────────
 _last_alert_time = 0
@@ -114,16 +115,42 @@ def _powershell_toast(title: str, message: str):
         pass
 
 
-def _send_telegram(title: str, message: str):
-    """Send alert via Telegram Bot API."""
+def _send_telegram(title: str, message: str, severity: int = 0, classification: str = "", source_ip: str = "", dest_ip: str = ""):
+    """Send alert via Telegram Bot API with formatted message."""
     if not TELEGRAM_ENABLED or not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
         return
     try:
-        text = f"{title}\n\n{message}"
+        # Determine threat level label
+        if severity >= 85:
+            threat_level = "CRITICAL"
+        elif severity >= 70:
+            threat_level = "HIGH"
+        elif severity >= 50:
+            threat_level = "MEDIUM"
+        else:
+            threat_level = "LOW"
+
+        import datetime
+        now = datetime.datetime.now().strftime("%H:%M:%S")
+
+        text = (
+            "\U0001f6a8 *AI-IDS ALERT*\n\n"
+            "\u26a0 Attack Detected\n"
+            f"\U0001f3af Target Device: `{dest_ip or 'ESP32-CAM'}`\n"
+            f"\U0001f552 Time: `{now}`\n"
+            f"\U0001f4ca Threat Level: *{threat_level}*\n"
+            f"\U0001f50d Type: `{classification}`\n"
+            f"\U0001f310 Source: `{source_ip}`\n\n"
+            f"\U0001f517 Open Security Dashboard:\n"
+            f"{DASHBOARD_URL}"
+        )
+
         url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
         resp = http_requests.post(url, json={
             "chat_id": TELEGRAM_CHAT_ID,
             "text": text,
+            "parse_mode": "Markdown",
+            "disable_web_page_preview": True,
         }, timeout=5)
         if resp.status_code == 200:
             print(f"[TELEGRAM] Alert sent successfully")
@@ -194,7 +221,7 @@ def trigger_alert(payload: dict):
     # Fire all channels in background threads (non-blocking)
     threading.Thread(target=_play_sound, args=(severity,), daemon=True).start()
     threading.Thread(target=_show_toast, args=(title, message, severity), daemon=True).start()
-    threading.Thread(target=_send_telegram, args=(title, message), daemon=True).start()
+    threading.Thread(target=_send_telegram, args=(title, message, severity, classification, source_ip, dest_ip), daemon=True).start()
 
 
 def get_alert_stats():
