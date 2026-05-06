@@ -3,10 +3,17 @@ import time
 import joblib
 import pandas as pd
 import requests
+import sys
 
 # --- CONFIGURATION ---
-TARGET_IP = "192.168.166.167"  # <-- ENTER YOUR ESP32-CAM IP HERE
+# Accept ESP32 IP as command-line argument: python live_guardian.py 192.168.x.x
+if len(sys.argv) > 1:
+    TARGET_IP = sys.argv[1]
+else:
+    TARGET_IP = "192.168.166.167"  # Default fallback
+
 WINDOW_SIZE = 2 
+DASHBOARD_URL = "http://localhost:8000"
 
 # --- TELEGRAM CONFIGURATION ---
 BOT_TOKEN = "8697442024:AAFnMcIqebrFuDg-k8NCEN6FxNITV_VbZls"
@@ -29,32 +36,66 @@ packet_count = 0
 byte_count = 0
 start_time = time.time()
 
-def send_telegram_alert(pkt_rate):
+def check_camera_health():
+    """Check if ESP32-CAM is still responding via HTTP."""
+    try:
+        resp = requests.get(f"http://{TARGET_IP}/", timeout=2)
+        if resp.status_code == 200:
+            return "STREAMING"
+        else:
+            return "DOWN"
+    except requests.exceptions.Timeout:
+        return "FROZEN"
+    except requests.exceptions.ConnectionError:
+        return "DOWN"
+    except Exception:
+        return "UNKNOWN"
+
+def report_camera_status(status):
+    """Report camera health to the dashboard backend."""
+    try:
+        requests.post(f"{DASHBOARD_URL}/api/esp32/camera-status", json={
+            "status": status,
+            "target_ip": TARGET_IP,
+        }, timeout=2)
+    except Exception:
+        pass  # Dashboard might not be running yet
+
+def send_telegram_alert(pkt_rate, cam_status="UNKNOWN"):
     global last_alert_time
     current_time = time.time()
     
     if current_time - last_alert_time > ALERT_COOLDOWN:
+        now_str = time.strftime("%H:%M:%S")
+        
+        # Determine threat level
+        if pkt_rate > 1500:
+            threat = "CRITICAL"
+        elif pkt_rate > 750:
+            threat = "HIGH"
+        else:
+            threat = "MEDIUM"
+
         message = (
-            "🚨 *CRITICAL SECURITY ALERT* 🚨\n\n"
-            "🛡️ *Guardian AI Intervention*\n"
-            "━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-            "🎯 *Target Node:* `IoT Edge (ESP32-CAM/DHT11)`\n"
-            "🔍 *Signature:* `DoS / UDP Flood Detected`\n"
-            f"📈 *Traffic Spike:* `{pkt_rate:.2f}` pkts/sec\n"
-            "━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            "_Automated defense systems engaged. Review dashboard immediately._"
+            "\U0001f6a8 *AI-IDS ALERT*\n\n"
+            "\u26a0 Attack Detected\n"
+            f"\U0001f3af Target Device: `ESP32-CAM ({TARGET_IP})`\n"
+            f"\U0001f552 Time: `{now_str}`\n"
+            f"\U0001f4ca Threat Level: *{threat}*\n"
+            f"\U0001f4c8 Traffic Spike: `{pkt_rate:.0f} pkts/sec`\n"
+            f"\U0001f4f7 Camera Status: `{cam_status}`\n\n"
+            f"\U0001f517 Open Security Dashboard:\n"
+            f"{DASHBOARD_URL}"
         )
         url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-        payload = {"chat_id": CHAT_ID, "text": message, "parse_mode": "Markdown"}
+        payload = {"chat_id": CHAT_ID, "text": message, "parse_mode": "Markdown", "disable_web_page_preview": True}
         
         try:
             requests.post(url, json=payload, timeout=2)
-            print("📱 [ALERT] Sent Telegram Warning successfully!")
+            print("[ALERT] Sent Telegram Warning successfully!")
             last_alert_time = current_time
         except Exception as e:
             print(f"[-] Failed to send Telegram alert: {e}")
-
-DASHBOARD_URL = "http://localhost:8000/api/esp32-traffic"
 
 def send_to_dashboard(packet_count, byte_count, pkt_rate, byte_rate, prediction):
     payload = {
@@ -65,7 +106,7 @@ def send_to_dashboard(packet_count, byte_count, pkt_rate, byte_rate, prediction)
         "prediction": int(prediction)
     }
     try:
-        requests.post(DASHBOARD_URL, json=payload, timeout=2)
+        requests.post(f"{DASHBOARD_URL}/api/esp32-traffic", json=payload, timeout=2)
     except Exception as e:
         print(f"[-] Failed to forward to dashboard: {e}")
 
@@ -92,11 +133,15 @@ def process_packet(packet):
         print(f"\n--- NETWORK TRAFFIC ---")
         print(f"Rate: {pkt_rate:.2f} pkts/sec | {byte_rate:.2f} bytes/sec")
         
+        # Check camera health
+        cam_status = check_camera_health()
+        report_camera_status(cam_status)
+        
         if prediction == 0:
-            print("🟢 STATUS: SECURE (Normal IoT Traffic)")
+            print(f"\U0001f7e2 STATUS: SECURE (Normal IoT Traffic) | Camera: {cam_status}")
         else:
-            print("🔴 WARNING: INTRUSION DETECTED! (AI Signature Match)")
-            send_telegram_alert(pkt_rate)
+            print(f"\U0001f534 WARNING: INTRUSION DETECTED! (AI Signature Match) | Camera: {cam_status}")
+            send_telegram_alert(pkt_rate, cam_status)
             
         send_to_dashboard(packet_count, byte_count, pkt_rate, byte_rate, prediction)
         
@@ -106,4 +151,7 @@ def process_packet(packet):
         start_time = current_time
 
 print(f"[*] Starting AI Guardian targeting {TARGET_IP}...")
+print(f"[*] Dashboard: {DASHBOARD_URL}")
+print(f"[*] Usage: python live_guardian.py <ESP32_IP>")
+print(f"[*] Press Ctrl+C to stop\n")
 sniff(prn=process_packet, store=False)
