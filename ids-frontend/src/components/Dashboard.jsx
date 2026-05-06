@@ -2,12 +2,13 @@ import ThreatGauge from './ThreatGauge';
 import ThroughputChart from './ThroughputChart';
 import PacketTable from './PacketTable';
 import AttackIntelligence from './AttackIntelligence';
+import ESP32DevicePanel from './ESP32DevicePanel';
 
 /**
  * Dashboard — Main SOC Layout
  * Stats bar → [Gauge | Throughput] → [AttackIntelligence | PacketTable]
  */
-export default function Dashboard({ packets, throughputHistory, threatIndex, latestPacket, stats }) {
+export default function Dashboard({ packets, throughputHistory, threatIndex, latestPacket, stats, esp32Status }) {
   const byClass = stats?.byClass || {};
   const total   = stats?.total   || 1;
 
@@ -48,6 +49,9 @@ export default function Dashboard({ packets, throughputHistory, threatIndex, lat
           );
         })}
       </div>
+
+      {/* ── ESP32 Hardware Status ──────────────────────────────────── */}
+      <ESP32DevicePanel esp32Status={esp32Status} />
 
       {/* ── Row 1: Gauge + Throughput Chart ────────────────────────── */}
       <div className="grid grid-cols-3 gap-3" style={{ height: '340px' }}>

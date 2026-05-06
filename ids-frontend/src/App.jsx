@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import useWebSocket from './hooks/useWebSocket';
 import Dashboard from './components/Dashboard';
@@ -22,6 +22,7 @@ function IdsApp({ setIsAuthenticated }) {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [simRunning, setSimRunning] = useState(true); // Backend auto-starts capture
   const [simLoading, setSimLoading] = useState(false);
+  const [esp32Status, setEsp32Status] = useState({});
 
   // Ref to hold the injection interval so we can clear it on stop
   const injectionRef = useRef(null);
@@ -39,6 +40,19 @@ function IdsApp({ setIsAuthenticated }) {
   const attackRate = stats.total > 0
     ? ((stats.attacks / stats.total) * 100).toFixed(1)
     : '0.0';
+
+  // ── Poll ESP32 device status every 3 seconds ───────────────────────────
+  useEffect(() => {
+    const poll = () => {
+      fetch(`${API_BASE}/api/esp32/status`)
+        .then(r => r.json())
+        .then(data => setEsp32Status(data))
+        .catch(() => {}); // silent on failure
+    };
+    poll(); // initial fetch
+    const timer = setInterval(poll, 3000);
+    return () => clearInterval(timer);
+  }, [API_BASE]);
 
   // Fire a single random attack injection at the backend
   const injectRandomAttack = useCallback(() => {
@@ -227,7 +241,7 @@ function IdsApp({ setIsAuthenticated }) {
 
       {/* ── Main Content ─────────────────────────────────────────────── */}
       <main className="max-w-screen-2xl mx-auto px-4 py-4">
-        {activeTab === 'dashboard' && <Dashboard {...wsData} />}
+        {activeTab === 'dashboard' && <Dashboard {...wsData} esp32Status={esp32Status} />}
         {activeTab === 'file-scanner' && <FileUploadPanel />}
         {activeTab === 'model-analysis' && <ModelAnalysis stats={stats} />}
       </main>
