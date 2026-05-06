@@ -33,9 +33,11 @@ function IdsApp({ setIsAuthenticated }) {
 
   // Auto-detect API base — works locally, with localtunnel, or any domain
   // On Vite dev server, use empty string so requests go through the Vite proxy (avoids CORS)
-  const API_BASE = window.location.port === '5173'
-    ? ''  // Vite dev: use proxy defined in vite.config.js
-    : `${window.location.protocol}//${window.location.host}`; // Production: same origin
+  const API_BASE = import.meta.env.VITE_API_URL 
+    ? import.meta.env.VITE_API_URL
+    : (window.location.port === '5173'
+        ? ''  // Vite dev: use proxy defined in vite.config.js
+        : `${window.location.protocol}//${window.location.host}`); // Production: same origin
 
   const attackRate = stats.total > 0
     ? ((stats.attacks / stats.total) * 100).toFixed(1)
