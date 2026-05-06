@@ -438,6 +438,18 @@ class TSharkCapture:
 
 capture = TSharkCapture()
 
+# ── ESP32 Device Status Tracker ──────────────────────────────────────────────
+esp32_device = {
+    "online": False,
+    "last_seen": 0,
+    "packet_rate": 0.0,
+    "byte_rate": 0.0,
+    "last_prediction": "BENIGN",
+    "last_severity": 0,
+    "camera_status": "UNKNOWN",
+    "target_ip": "192.168.166.167",
+}
+
 #  App Lifecycle 
 @contextlib.asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -617,6 +629,12 @@ class ESP32LiveFeatures(BaseModel):
 
 @app.post("/api/esp32-traffic")
 async def receive_esp32_traffic(features: ESP32LiveFeatures):
+    # Update ESP32 device heartbeat
+    esp32_device["last_seen"] = time.time()
+    esp32_device["online"] = True
+    esp32_device["packet_rate"] = features.packet_rate
+    esp32_device["byte_rate"] = features.byte_rate
+
     pred = features.prediction
     conf = 1.0
 
@@ -654,8 +672,41 @@ async def receive_esp32_traffic(features: ESP32LiveFeatures):
         "pps":            int(round(features.packet_rate)),
         "source":         "esp32_custom",
     }
+    # Update device prediction status
+    esp32_device["last_prediction"] = label
+    esp32_device["last_severity"] = int(severity)
+
     await manager.broadcast(payload)
     return {"status": "received", "prediction": label, "severity": severity}
+
+# ── ESP32 Device Status API ──────────────────────────────────────────────────
+@app.get("/api/esp32/status")
+async def get_esp32_status():
+    """Returns the current ESP32 device status for dashboard polling."""
+    # Auto-detect offline if no heartbeat in 10 seconds
+    if esp32_device["last_seen"] > 0 and (time.time() - esp32_device["last_seen"]) > 10:
+        esp32_device["online"] = False
+    return {
+        "online": esp32_device["online"],
+        "last_seen": esp32_device["last_seen"],
+        "packet_rate": esp32_device["packet_rate"],
+        "byte_rate": esp32_device["byte_rate"],
+        "last_prediction": esp32_device["last_prediction"],
+        "last_severity": esp32_device["last_severity"],
+        "camera_status": esp32_device["camera_status"],
+        "target_ip": esp32_device["target_ip"],
+    }
+
+class CameraStatusUpdate(BaseModel):
+    status: str  # STREAMING, FROZEN, DOWN
+    target_ip: str = "192.168.166.167"
+
+@app.post("/api/esp32/camera-status")
+async def update_camera_status(body: CameraStatusUpdate):
+    """Called by live_guardian.py to report ESP32-CAM health."""
+    esp32_device["camera_status"] = body.status
+    esp32_device["target_ip"] = body.target_ip
+    return {"status": "updated", "camera_status": body.status}
 
 #  Authentication API 
 class LoginRequest(BaseModel):
