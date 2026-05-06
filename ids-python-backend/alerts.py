@@ -9,7 +9,7 @@ import requests as http_requests
 
 # ─── Configuration ────────────────────────────────────────────────────────────
 ALERT_ENABLED = True
-ALERT_COOLDOWN_SECONDS = 5        # 1 alert per ~5 seconds
+ALERT_COOLDOWN_SECONDS = 10       # 1 alert per 10 seconds for demo
 SEVERITY_THRESHOLD = 50           # Only alert on severity >= this value
 SOUND_ENABLED = True
 TOAST_ENABLED = True
@@ -18,7 +18,7 @@ TELEGRAM_ENABLED = True           # Telegram alerts ON
 # ─── Telegram Config ─────────────────────────────────────────────────────────
 TELEGRAM_BOT_TOKEN = "8697442024:AAFnMcIqebrFuDg-k8NCEN6FxNITV_VbZls"
 TELEGRAM_CHAT_ID = "5120288258"
-DASHBOARD_URL = "http://localhost:8000"  # Updated by localtunnel if running
+DASHBOARD_URL = "https://ai-iot-ids.vercel.app/"  # Updated to Vercel production link
 
 # ─── Internal State ──────────────────────────────────────────────────────────
 _last_alert_time = 0

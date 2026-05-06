@@ -11,7 +11,7 @@ import ipaddress
 import pandas as pd
 import numpy as np
 import joblib
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, File, UploadFile, HTTPException, Query
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, File, UploadFile, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -628,12 +628,16 @@ class ESP32LiveFeatures(BaseModel):
     prediction: int = -1 # Optional: If live_guardian does the prediction
 
 @app.post("/api/esp32-traffic")
-async def receive_esp32_traffic(features: ESP32LiveFeatures):
+async def receive_esp32_traffic(features: ESP32LiveFeatures, request: Request):
     # Update ESP32 device heartbeat
     esp32_device["last_seen"] = time.time()
     esp32_device["online"] = True
     esp32_device["packet_rate"] = features.packet_rate
     esp32_device["byte_rate"] = features.byte_rate
+    
+    # Automatically capture the IP of the sending device
+    if request.client:
+        esp32_device["target_ip"] = request.client.host
 
     pred = features.prediction
     conf = 1.0
@@ -684,8 +688,10 @@ async def receive_esp32_traffic(features: ESP32LiveFeatures):
 async def get_esp32_status():
     """Returns the current ESP32 device status for dashboard polling."""
     # Auto-detect offline if no heartbeat in 10 seconds
-    if esp32_device["last_seen"] > 0 and (time.time() - esp32_device["last_seen"]) > 10:
+    if esp32_device["last_seen"] == 0 or (time.time() - esp32_device["last_seen"]) > 10:
         esp32_device["online"] = False
+    else:
+        esp32_device["online"] = True
     return {
         "online": esp32_device["online"],
         "last_seen": esp32_device["last_seen"],

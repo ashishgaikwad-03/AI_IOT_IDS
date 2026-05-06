@@ -23,7 +23,7 @@ timeout /t 5 /nobreak >nul
 
 :: Step 2: Start localtunnel for public URL
 echo  [2/3] Starting Public Tunnel...
-start "IDS-Tunnel" cmd /k "cd /d "%DIR%" && npx -y localtunnel --port 8000"
+start "IDS-Tunnel" cmd /k "cd /d "%DIR%" && npx -y localtunnel --port 8000 --subdomain ashish-ids-sensor"
 
 :: Wait for tunnel
 timeout /t 5 /nobreak >nul

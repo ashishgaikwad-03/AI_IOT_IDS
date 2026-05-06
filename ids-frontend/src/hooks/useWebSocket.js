@@ -147,10 +147,13 @@ export default function useWebSocket(
     throughputBufRef.current.pps  += (packet.pps || 1);
     throughputBufRef.current.count += 1;
 
-    threatIndexRef.current = Math.round(
-      THREAT_EMA_ALPHA * packet.severityScore +
-      (1 - THREAT_EMA_ALPHA) * threatIndexRef.current
-    );
+    // Use Peak Detection: Show max severity if it's higher than current, 
+    // otherwise let it decay slowly (0.1 decay)
+    if (packet.severityScore > threatIndexRef.current) {
+      threatIndexRef.current = packet.severityScore;
+    } else {
+      threatIndexRef.current = Math.max(0, threatIndexRef.current - 1);
+    }
     setThreatIndex(threatIndexRef.current);
 
     const prev = statsRef.current;
